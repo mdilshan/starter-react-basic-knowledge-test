@@ -28,8 +28,11 @@
  * @author dilshan@axoten.com
  */
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import "./App.css";
+import { Card } from "./components/Card";
+import { ToDoForm } from "./components/ToDoForm";
+import { ToDoList } from "./components/ToDoList";
 
 function App() {
   const [todos, setTodos] = useState<string[]>([]);
@@ -37,47 +40,38 @@ function App() {
   const [isLoading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
+    function init() {
       setTodos(["TODO #1", "TODO #2", "TODO #3"]);
       setLoading(false);
-    }, 2000);
+    }
+
+    setLoading(true);
+    let fakeNetReq = setTimeout(init, 2000);
+
+    return () => clearTimeout(fakeNetReq);
+  }, []);
+
+  const onAddTodo = useCallback((todo: string) => {
+    setTodos([todo, ...todos]);
+    setNewToDo("");
   }, []);
 
   return (
     <div className="App">
       <div className="App__todo-container">
         <div className="App__todo-container--top">
-          <input
-            type="text"
-            className="App__todo-container--top-input"
-            onChange={(e) => setNewToDo(e.target.value)}
-            value={newToDo}
+          <ToDoForm
+            newToDo={newToDo}
+            setNewToDo={setNewToDo}
+            onAddTodo={onAddTodo}
           />
-          <button
-            className="App__todo-container--top-button"
-            onClick={() => {
-              setTodos([newToDo, ...todos]);
-              setNewToDo("");
-            }}
-          >
-            ADD
-          </button>
         </div>
 
         <div className="App__todo-container--main">
           {newToDo.length > 0 && (
-            <div className="Card" style={{ backgroundColor: "yellow" }}>
-              {newToDo}
-            </div>
+            <Card style={{ backgroundColor: "yellow" }}>{newToDo}</Card>
           )}
-          {isLoading ? (
-            <div>Loading...</div>
-          ) : (
-            todos.map((item, index) => {
-              return <div className="Card">{item}</div>;
-            })
-          )}
+          {isLoading ? <div>Loading...</div> : <ToDoList todos={todos} />}
         </div>
       </div>
     </div>
